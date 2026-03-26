@@ -2,42 +2,36 @@ from flask import Flask, request, jsonify
 import time
 
 app = Flask(__name__)
+boss_data = []
 
-boss_list = []
-
-# thêm boss
 @app.route("/add", methods=["POST"])
 def add():
     data = request.json
-    
+
     boss = {
-        "boss": data.get("boss"),
-        "jobId": data.get("jobId"),
-        "placeId": data.get("placeId"),
+        "boss": data["boss"],
+        "jobId": data["jobId"],
+        "placeId": data["placeId"],
         "time": time.time()
     }
 
-    # tránh trùng jobId
-    for b in boss_list:
+    # tránh trùng server
+    for b in boss_data:
         if b["jobId"] == boss["jobId"]:
             return {"status": "duplicate"}
 
-    boss_list.append(boss)
-
+    boss_data.append(boss)
     return {"status": "ok"}
 
-# lấy boss
 @app.route("/get", methods=["GET"])
 def get():
-    # lọc boss còn "mới" (ví dụ 10 phút)
     now = time.time()
-    valid = []
 
-    for b in boss_list:
-        if now - b["time"] < 600:
-            valid.append(b)
+    valid = [
+        b for b in boss_data
+        if now - b["time"] < 600
+    ]
 
     return jsonify(valid)
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+app.run(host="0.0.0.0", port=5000)
